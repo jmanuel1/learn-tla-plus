@@ -16,7 +16,13 @@ ToClock2(seconds) ==
     IN
         <<h, m, s>>
         
-Eval == ToClock2(86401)
+Test == LET
+    seq == <<1, 2, 3, 4>>
+    s == 1..4
+IN
+    CHOOSE p \in s \X s: seq[p[1]] = seq[p[2]]
+
+Eval == Test
 
 MinutesToSeconds(m) == m * 60
 SecondsPerMinute == 60
@@ -48,9 +54,15 @@ ThreeMax(a, b, c) ==
     IN
         Max(maxab, c)
         
+IsComposite(num) ==
+    \E m, n \in 2..num:
+        m * n = num
 
+Contains(seq, elem) ==
+    \E i \in 1..Len(seq):
+        seq[i] = elem
 
 =============================================================================
 \* Modification History
-\* Last modified Wed Jan 18 22:17:47 MST 2023 by jamai
+\* Last modified Thu Jan 19 01:20:26 MST 2023 by jamai
 \* Created Wed Jan 18 21:13:07 MST 2023 by jamai

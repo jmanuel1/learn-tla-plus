@@ -1,5 +1,5 @@
 ----------------------------- MODULE duplicates -----------------------------
-EXTENDS Integers, Sequences, TLC
+EXTENDS Integers, Sequences, TLC, FiniteSets
 
 S == 1..10
 
@@ -9,6 +9,18 @@ S == 1..10
     seen = {};
     is_unique = TRUE;
     
+ define
+    TypeInvariant == \*is_unique = TRUE
+        /\ is_unique \in BOOLEAN
+        /\ seen \subseteq S
+        /\ index \in 1..Len(seq)+1
+    IsUnique(s) == \*Cardinality(seen) = Len(s)
+        \A i, j \in 1..Len(s):
+            i # j => s[i] # s[j]
+    IsCorrect == pc = "Done" => is_unique = IsUnique(seq)
+
+ end define;
+
  begin
     Iterate:
         while index <= Len(seq) do
@@ -20,8 +32,19 @@ S == 1..10
             index := index + 1
         end while;
  end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "e8cc16ef" /\ chksum(tla) = "47b820d1")
+\* BEGIN TRANSLATION (chksum(pcal) = "9eaf8f8e" /\ chksum(tla) = "99796512")
 VARIABLES seq, index, seen, is_unique, pc
+
+(* define statement *)
+TypeInvariant ==
+    /\ is_unique \in BOOLEAN
+    /\ seen \subseteq S
+    /\ index \in 1..Len(seq)+1
+IsUnique(s) ==
+    \A i, j \in 1..Len(s):
+        i # j => s[i] # s[j]
+IsCorrect == pc = "Done" => is_unique = IsUnique(seq)
+
 
 vars == << seq, index, seen, is_unique, pc >>
 
@@ -59,5 +82,5 @@ Termination == <>(pc = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Wed Jan 18 23:11:50 MST 2023 by jamai
+\* Last modified Thu Jan 19 01:19:22 MST 2023 by jamai
 \* Created Wed Jan 18 22:53:05 MST 2023 by jamai
