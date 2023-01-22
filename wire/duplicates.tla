@@ -1,10 +1,14 @@
 ----------------------------- MODULE duplicates -----------------------------
 EXTENDS Integers, Sequences, TLC, FiniteSets
 
-S == 1..10
+CONSTANT S, Size
+ASSUME Cardinality(S) >= 4
+ASSUME Size > 0
 
 (*--algorithm dup
-    variable seq \in S \X S \X S \X S;
+    variable
+    n \in 1..Size;
+    seq \in [1..n -> S];
     index = 1;
     seen = {};
     is_unique = TRUE;
@@ -32,8 +36,8 @@ S == 1..10
             index := index + 1
         end while;
  end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "9eaf8f8e" /\ chksum(tla) = "99796512")
-VARIABLES seq, index, seen, is_unique, pc
+\* BEGIN TRANSLATION (chksum(pcal) = "540c1e02" /\ chksum(tla) = "9e7fbf07")
+VARIABLES n, seq, index, seen, is_unique, pc
 
 (* define statement *)
 TypeInvariant ==
@@ -46,10 +50,11 @@ IsUnique(s) ==
 IsCorrect == pc = "Done" => is_unique = IsUnique(seq)
 
 
-vars == << seq, index, seen, is_unique, pc >>
+vars == << n, seq, index, seen, is_unique, pc >>
 
 Init == (* Global variables *)
-        /\ seq \in S \X S \X S \X S
+        /\ n \in 1..Size
+        /\ seq \in [1..n -> S]
         /\ index = 1
         /\ seen = {}
         /\ is_unique = TRUE
@@ -66,7 +71,7 @@ Iterate == /\ pc = "Iterate"
                       /\ pc' = "Iterate"
                  ELSE /\ pc' = "Done"
                       /\ UNCHANGED << index, seen, is_unique >>
-           /\ seq' = seq
+           /\ UNCHANGED << n, seq >>
 
 (* Allow infinite stuttering to prevent deadlock on termination. *)
 Terminating == pc = "Done" /\ UNCHANGED vars
@@ -82,5 +87,5 @@ Termination == <>(pc = "Done")
 
 =============================================================================
 \* Modification History
-\* Last modified Thu Jan 19 01:19:22 MST 2023 by jamai
+\* Last modified Sun Jan 22 09:55:45 MST 2023 by jamai
 \* Created Wed Jan 18 22:53:05 MST 2023 by jamai
