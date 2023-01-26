@@ -8,7 +8,7 @@ Threads == 1..NumThreads
 (* --algorithm threads
 
 variables
-    counter = 1;
+    counter = 0;
     lock = NULL;
     
 define
@@ -18,13 +18,19 @@ define
     Liveness ==
         \A t \in Threads:
             <>(lock = t)
+
+    CounterOnlyIncreases ==
+        [][counter' >= counter]_counter
+
+    LockCantBeStolen ==
+        [][lock # NULL => lock' = NULL]_lock
 end define;
 
-fair process thread \in Threads
+process thread \in Threads
 variables tmp = 0;
 begin
     GetLock:
-        await lock = NULL;
+\*        await lock = NULL;
         lock := self;
     GetCounter:
         tmp := counter;
@@ -37,7 +43,7 @@ begin
 \*        goto GetLock;
 end process;
 end algorithm; *)
-\* BEGIN TRANSLATION (chksum(pcal) = "be199a7f" /\ chksum(tla) = "9c16c1db")
+\* BEGIN TRANSLATION (chksum(pcal) = "e423a244" /\ chksum(tla) = "3e205078")
 VARIABLES counter, lock, pc
 
 (* define statement *)
@@ -48,6 +54,12 @@ Liveness ==
     \A t \in Threads:
         <>(lock = t)
 
+CounterOnlyIncreases ==
+    [][counter' >= counter]_counter
+
+LockCantBeStolen ==
+    [][lock # NULL => lock' = NULL]_lock
+
 VARIABLE tmp
 
 vars == << counter, lock, pc, tmp >>
@@ -55,14 +67,13 @@ vars == << counter, lock, pc, tmp >>
 ProcSet == (Threads)
 
 Init == (* Global variables *)
-        /\ counter = 1
+        /\ counter = 0
         /\ lock = NULL
         (* Process thread *)
         /\ tmp = [self \in Threads |-> 0]
         /\ pc = [self \in ProcSet |-> "GetLock"]
 
 GetLock(self) == /\ pc[self] = "GetLock"
-                 /\ lock = NULL
                  /\ lock' = self
                  /\ pc' = [pc EXCEPT ![self] = "GetCounter"]
                  /\ UNCHANGED << counter, tmp >>
@@ -79,7 +90,7 @@ IncCounter(self) == /\ pc[self] = "IncCounter"
 
 ReleaseLock(self) == /\ pc[self] = "ReleaseLock"
                      /\ Assert(lock = self, 
-                               "Failure of assertion at line 34, column 9.")
+                               "Failure of assertion at line 40, column 9.")
                      /\ lock' = NULL
                      /\ pc' = [pc EXCEPT ![self] = "Done"]
                      /\ UNCHANGED << counter, tmp >>
@@ -94,8 +105,7 @@ Terminating == /\ \A self \in ProcSet: pc[self] = "Done"
 Next == (\E self \in Threads: thread(self))
            \/ Terminating
 
-Spec == /\ Init /\ [][Next]_vars
-        /\ \A self \in Threads : WF_vars(thread(self))
+Spec == Init /\ [][Next]_vars
 
 Termination == <>(\A self \in ProcSet: pc[self] = "Done")
 
@@ -109,5 +119,5 @@ CounterNotLtTmp2 ==
         tmp[t] <= counter
 =============================================================================
 \* Modification History
-\* Last modified Sun Jan 22 22:36:08 MST 2023 by jamai
+\* Last modified Wed Jan 25 21:07:41 MST 2023 by jamai
 \* Created Sun Jan 22 18:15:41 MST 2023 by jamai
